@@ -1,5 +1,5 @@
-import copyFile from 'fs-copy-compat';
 import fs from 'fs';
+import { copyFile } from 'fs-copy-compat';
 import Iterator, { type Entry } from 'fs-iterator';
 import mkdirp from 'mkdirp-classic';
 import path from 'path';
