@@ -72,7 +72,10 @@ function addTests(repo) {
           if (targets.includes('umd')) {
             assert.ok(fs.existsSync(path.join(dest, 'dist', 'umd')), 'dist/umd folder should exist for UMD target');
             const umdFiles = fs.readdirSync(path.join(dest, 'dist', 'umd'));
-            assert.ok(umdFiles.some((f) => f.endsWith('.cjs')), 'UMD .cjs file should exist');
+            assert.ok(
+              umdFiles.some((f) => f.endsWith('.cjs')),
+              'UMD .cjs file should exist'
+            );
           }
 
           done();
