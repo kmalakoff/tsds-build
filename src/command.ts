@@ -1,6 +1,6 @@
+import { safeRm } from 'fs-remove-compat';
 import path from 'path';
 import Queue from 'queue-cb';
-import rimraf2 from 'rimraf2';
 import { type CommandCallback, loadConfig } from 'tsds-lib';
 import { DEFAULT_TARGETS } from './constants.ts';
 import files from './lib/files.ts';
@@ -18,7 +18,7 @@ export default function build(args: string[], options: BuildOptions, callback: C
   const clean = options.clean === undefined ? true : options.clean;
   const dest = path.join(cwd, 'dist');
   const queue = new Queue(1);
-  !clean || queue.defer((cb) => rimraf2(dest, { disableGlob: true }, cb.bind(null, null)));
+  !clean || queue.defer((cb) => safeRm(dest, cb));
   targets.indexOf('cjs') < 0 || queue.defer(files.bind(null, args, 'cjs', options));
   targets.indexOf('esm') < 0 || queue.defer(files.bind(null, args, 'esm', options));
   targets.indexOf('umd') < 0 || queue.defer(umd.bind(null, args, options));

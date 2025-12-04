@@ -1,10 +1,10 @@
 import spawn from 'cross-spawn-cb';
+import { safeRm } from 'fs-remove-compat';
 import { installSync } from 'install-optional';
 import debounce from 'lodash.debounce';
 import path from 'path';
 import Queue from 'queue-cb';
 import resolveBin from 'resolve-bin-sync';
-import rimraf2 from 'rimraf2';
 import { type CommandCallback, type CommandOptions, wrapWorker } from 'tsds-lib';
 import url from 'url';
 
@@ -26,7 +26,7 @@ function worker(_args: string[], options: CommandOptions, callback: CommandCallb
     const rollup = resolveBin('rollup');
 
     const queue = new Queue(1);
-    queue.defer((cb) => rimraf2(dest, { disableGlob: true }, cb.bind(null, null)));
+    queue.defer((cb) => safeRm(dest, cb));
     queue.defer(spawn.bind(null, rollup, ['--config', path.join(configRoot, 'config.js')], options));
     queue.defer(spawn.bind(null, rollup, ['--config', path.join(configRoot, 'config.min.js')], options));
     queue.await(callback);
