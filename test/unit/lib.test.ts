@@ -20,7 +20,12 @@ import build from 'tsds-build';
 
 const __dirname = path.dirname(typeof __filename !== 'undefined' ? __filename : url.fileURLToPath(import.meta.url));
 
-const GITS = ['https://github.com/kmalakoff/fetch-http-message.git', 'https://github.com/kmalakoff/parser-multipart.git', 'https://github.com/kmalakoff/react-dom-event.git'];
+const GITS = [
+  'https://github.com/kmalakoff/fetch-http-message.git',
+  'https://github.com/kmalakoff/parser-multipart.git',
+  'https://github.com/kmalakoff/react-dom-event.git',
+  'https://github.com/kmalakoff/react-ref-boundary.git', // .tsx source with UMD target
+];
 
 function addTests(repo) {
   const repoName = path.basename(repo, path.extname(repo));
@@ -60,6 +65,16 @@ function addTests(repo) {
           }
           // Verify dist folder was created
           assert.ok(fs.existsSync(path.join(dest, 'dist')), 'dist folder should exist');
+
+          // Verify UMD output exists when configured
+          const pkg = JSON.parse(fs.readFileSync(path.join(dest, 'package.json'), 'utf8'));
+          const targets = pkg.tsds?.targets || [];
+          if (targets.includes('umd')) {
+            assert.ok(fs.existsSync(path.join(dest, 'dist', 'umd')), 'dist/umd folder should exist for UMD target');
+            const umdFiles = fs.readdirSync(path.join(dest, 'dist', 'umd'));
+            assert.ok(umdFiles.some((f) => f.endsWith('.cjs')), 'UMD .cjs file should exist');
+          }
+
           done();
         });
       });
