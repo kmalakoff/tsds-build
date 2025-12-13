@@ -1,4 +1,4 @@
-// remove NODE_OPTIONS from ts-dev-stack
+// remove NODE_OPTIONS to not interfere with tests
 delete process.env.NODE_OPTIONS;
 
 import assert from 'assert';
@@ -12,6 +12,8 @@ import * as resolve from 'resolve';
 import shortHash from 'short-hash';
 import { installGitRepo } from 'tsds-lib-test';
 import url from 'url';
+
+import { arrayIncludes, stringEndsWith } from '../lib/compat.ts';
 
 const tmpdir = os.tmpdir || osShim.tmpdir;
 const resolveSync = (resolve.default ?? resolve).sync;
@@ -60,7 +62,7 @@ function addTests(repo) {
       it('build', (done) => {
         build([], { cwd: dest }, (err?: Error): undefined => {
           if (err) {
-            done(err.message);
+            done(err);
             return;
           }
           // Verify dist folder was created
@@ -69,11 +71,11 @@ function addTests(repo) {
           // Verify UMD output exists when configured
           const pkg = JSON.parse(fs.readFileSync(path.join(dest, 'package.json'), 'utf8'));
           const targets = pkg.tsds?.targets || [];
-          if (targets.includes('umd')) {
+          if (arrayIncludes(targets, 'umd')) {
             assert.ok(fs.existsSync(path.join(dest, 'dist', 'umd')), 'dist/umd folder should exist for UMD target');
             const umdFiles = fs.readdirSync(path.join(dest, 'dist', 'umd'));
             assert.ok(
-              umdFiles.some((f) => f.endsWith('.cjs')),
+              umdFiles.some((f) => stringEndsWith(f, '.cjs')),
               'UMD .cjs file should exist'
             );
           }

@@ -1,1 +1,1 @@
-ignores: ["node-version-use", "ts-dev-stack", "tsds-build", "mocha", "mocha-compat", "ts-swc-loaders", "rollup"]
+ignores: ["node-version-use", "ts-dev-stack", "tsds-build", "rollup"]
