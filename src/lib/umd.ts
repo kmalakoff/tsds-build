@@ -2,17 +2,18 @@ import spawn from 'cross-spawn-cb';
 import { safeRm } from 'fs-remove-compat';
 import { installSync } from 'install-optional';
 import debounce from 'lodash.debounce';
+import { wrap } from 'node-version-call';
 import path from 'path';
 import Queue from 'queue-cb';
 import resolveBin from 'resolve-bin-sync';
-import { type CommandCallback, type CommandOptions, wrapWorker } from 'tsds-lib';
+import type { CommandCallback, CommandOptions } from 'tsds-lib';
 import url from 'url';
 
 const major = +process.versions.node.split('.')[0];
 const version = major > 14 ? 'local' : 'stable';
 const __dirname = path.dirname(typeof __filename === 'undefined' ? url.fileURLToPath(import.meta.url) : __filename);
 const dist = path.join(__dirname, '..', '..');
-const workerWrapper = wrapWorker(path.join(dist, 'cjs', 'lib', 'umd.js'));
+const workerWrapper = wrap(path.join(dist, 'cjs', 'lib', 'umd.js'));
 
 const installSyncRollup = debounce(installSync, 300, { leading: true, trailing: false });
 
