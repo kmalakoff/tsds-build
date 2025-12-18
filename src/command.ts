@@ -7,7 +7,7 @@ import files from './lib/files.ts';
 import umd from './lib/umd.ts';
 import type { BuildOptions } from './types.ts';
 
-export default function build(args: string[], options: BuildOptions, callback: CommandCallback): undefined {
+export default function build(args: string[], options: BuildOptions, callback: CommandCallback): void {
   const config = loadConfig(options);
   if (!config) {
     console.log('tsds: no config. Skipping');
