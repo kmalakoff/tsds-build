@@ -17,7 +17,7 @@ const workerWrapper = wrap(path.join(dist, 'cjs', 'lib', 'umd.js'));
 
 const installSyncRollup = debounce(installSync, 300, { leading: true, trailing: false });
 
-function worker(_args: string[], options: CommandOptions, callback: CommandCallback): undefined {
+function worker(_args: string[], options: CommandOptions, callback: CommandCallback) {
   const cwd: string = (options.cwd as string) || process.cwd();
   const dest = path.join(cwd, 'dist', 'umd');
   const configRoot = path.join(dist, 'esm', 'rollup');
@@ -36,6 +36,6 @@ function worker(_args: string[], options: CommandOptions, callback: CommandCallb
   }
 }
 
-export default function umd(args: string[], options: CommandOptions, callback: CommandCallback): undefined {
+export default function umd(args: string[], options: CommandOptions, callback: CommandCallback): void {
   version !== 'local' ? workerWrapper('stable', args, options, callback) : worker(args, options, callback);
 }
