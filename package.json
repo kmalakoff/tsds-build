@@ -44,9 +44,9 @@
   "dependencies": {
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^0.4.4",
-    "cross-spawn-cb": "^2.0.0",
+    "cross-spawn-cb": "^3.0.0",
     "fs-copy-compat": "^1.0.0",
-    "fs-iterator": "^6.1.12",
+    "fs-iterator": "^7.0.0",
     "fs-remove-compat": "^1.0.0",
     "install-optional": "^1.0.20",
     "lodash.camelcase": "^4.3.0",

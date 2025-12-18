@@ -15,7 +15,7 @@ const reportFn = (dest: string, type: TargetType, cb: CommandCallback | DeferCal
   cb(err);
 };
 
-export default function files(_args: string[], type: TargetType, options: CommandOptions, callback: CommandCallback): undefined {
+export default function files(_args: string[], type: TargetType, options: CommandOptions, callback: CommandCallback): void {
   const config = loadConfig(options);
   if (!config) {
     console.log('tsds: no config. Skipping');
@@ -44,7 +44,7 @@ export default function files(_args: string[], type: TargetType, options: Comman
       // move the types into the folder with the correct extension
       const iterator = new Iterator(dest);
       iterator.forEach(
-        (entry: Entry, cb): undefined => {
+        (entry: Entry, cb): void => {
           const ext = path.extname(entry.basename);
           if (!entry.stats.isFile() || ['.js', '.mjs'].indexOf(ext) < 0) {
             cb();
