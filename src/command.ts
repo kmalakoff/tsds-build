@@ -18,7 +18,7 @@ export default function build(args: string[], options: BuildOptions, callback: C
   const clean = options.clean === undefined ? true : options.clean;
   const dest = path.join(cwd, 'dist');
   const queue = new Queue(1);
-  !clean || queue.defer((cb) => safeRm(dest, cb));
+  if (clean) queue.defer(safeRm.bind(null, dest));
   targets.indexOf('cjs') < 0 || queue.defer(files.bind(null, args, 'cjs', options));
   targets.indexOf('esm') < 0 || queue.defer(files.bind(null, args, 'esm', options));
   targets.indexOf('umd') < 0 || queue.defer(umd.bind(null, args, options));
