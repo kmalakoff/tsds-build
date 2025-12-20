@@ -25,7 +25,7 @@ function run(_args: string[], options: CommandOptions, callback: CommandCallback
     const rollup = resolveBin('rollup');
 
     const queue = new Queue(1);
-    queue.defer((cb) => safeRm(dest, cb));
+    queue.defer(safeRm.bind(null, dest));
     queue.defer(spawn.bind(null, rollup, ['--config', path.join(configRoot, 'config.js')], options));
     queue.defer(spawn.bind(null, rollup, ['--config', path.join(configRoot, 'config.min.js')], options));
     queue.await(callback);
