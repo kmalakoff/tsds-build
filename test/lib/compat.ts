@@ -5,9 +5,7 @@
 
 // Array.prototype.includes (ES2016)
 export function arrayIncludes<T>(arr: T[], search: T): boolean {
-  if (typeof arr.includes === 'function') {
-    return arr.includes(search);
-  }
+  if (typeof arr.includes === 'function') return arr.includes(search);
   for (let i = 0; i < arr.length; i++) {
     if (arr[i] === search) return true;
   }
@@ -15,11 +13,9 @@ export function arrayIncludes<T>(arr: T[], search: T): boolean {
 }
 
 // String.prototype.endsWith (ES2015)
-export function stringEndsWith(str: string, search: string, length?: number): boolean {
-  if (typeof str.endsWith === 'function') {
-    return str.endsWith(search, length);
-  }
-  length = length === undefined ? str.length : length;
-  const pos = length - search.length;
-  return pos >= 0 && str.indexOf(search, pos) === pos;
+const hasEndsWith = typeof String.prototype.endsWith === 'function';
+export function stringEndsWith(str: string, search: string, position?: number): boolean {
+  if (hasEndsWith) return str.endsWith(search, position);
+  const len = position === undefined ? str.length : position;
+  return str.lastIndexOf(search) === len - search.length;
 }
