@@ -9,7 +9,8 @@ export const pkg = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'package.
 const config = loadConfig();
 if (!config?.source) throw new Error('Missing "source" in package.json or .tsdsrc.json. Add "source": "src/index.ts" (or .tsx) to your config.');
 export const source = config.source;
-export const input = path.join.apply(null, [process.cwd(), ...source.split('/')]) as string;
+const entry = (config?.entry ?? source) as string;
+export const input = path.join.apply(null, [process.cwd(), ...entry.split('/')]) as string;
 export const name = camelcase(pkg.name) as string;
 export const globals = (config?.globals || {}) as Record<string, string>;
 
