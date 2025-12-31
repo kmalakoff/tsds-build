@@ -91,3 +91,73 @@ describe('lib', () => {
     addTests(GITS[i]);
   }
 });
+
+describe('umd entry override', () => {
+  const dest = path.join(tmpdir(), 'tsds-build', shortHash(process.cwd()), 'umd-entry-override');
+  const modulePath = fs.realpathSync(path.join(__dirname, '..', '..'));
+  const modulePackage = JSON.parse(fs.readFileSync(path.join(modulePath, 'package.json'), 'utf8'));
+  const nodeModules = path.join(dest, 'node_modules');
+  const deps = { ...(modulePackage.dependencies || {}), ...(modulePackage.peerDependencies || {}) };
+  const pkgName = 'tsds-build-umd-entry-test';
+
+  before((cb) => {
+    fs.rmSync(dest, { recursive: true, force: true });
+    fs.mkdirSync(path.join(dest, 'src'), { recursive: true });
+
+    const pkg = {
+      name: pkgName,
+      version: '0.0.0',
+      tsds: {
+        source: 'src/index.ts',
+        entry: 'src/umd.ts',
+        targets: ['umd'],
+      },
+    };
+    fs.writeFileSync(path.join(dest, 'package.json'), JSON.stringify(pkg, null, 2));
+    fs.writeFileSync(
+      path.join(dest, 'tsconfig.json'),
+      JSON.stringify(
+        {
+          compilerOptions: {
+            module: 'esnext',
+            moduleResolution: 'node',
+            target: 'es2017',
+            esModuleInterop: true,
+          },
+        },
+        null,
+        2
+      )
+    );
+    fs.writeFileSync(path.join(dest, 'src', 'index.ts'), "export const fromIndex = 'INDEX_ONLY';\n");
+    fs.writeFileSync(path.join(dest, 'src', 'umd.ts'), "export const fromUmd = 'UMD_ONLY';\nexport default function umdDefault() { return fromUmd; }\n");
+
+    const queue = new Queue();
+    queue.defer(linkModule.bind(null, modulePath, nodeModules));
+    for (const dep in deps) queue.defer(linkModule.bind(null, path.dirname(resolveSync(`${dep}/package.json`)), nodeModules));
+    queue.await(cb);
+  });
+
+  after((cb) => {
+    const queue = new Queue();
+    queue.defer(unlinkModule.bind(null, modulePath, nodeModules));
+    for (const dep in deps) queue.defer(unlinkModule.bind(null, path.dirname(resolveSync(`${dep}/package.json`)), nodeModules));
+    queue.await(cb);
+  });
+
+  it('uses entry for UMD bundle input', (done) => {
+    build([], { cwd: dest }, (err?: Error): void => {
+      if (err) {
+        done(err);
+        return;
+      }
+
+      const umdFile = path.join(dest, 'dist', 'umd', `${pkgName}.cjs`);
+      assert.ok(fs.existsSync(umdFile), 'UMD output should exist');
+      const output = fs.readFileSync(umdFile, 'utf8');
+      assert.ok(output.includes('UMD_ONLY'), 'UMD bundle should include entry override content');
+      assert.ok(!output.includes('INDEX_ONLY'), 'UMD bundle should not include default source content');
+      done();
+    });
+  });
+});
