@@ -2,12 +2,14 @@ import fs from 'fs';
 import { copyFile } from 'fs-copy-compat';
 import Iterator, { type Entry } from 'fs-iterator';
 import mkdirp from 'mkdirp-classic';
+import os from 'os';
 import path from 'path';
 import Queue, { type DeferCallback } from 'queue-cb';
 import { type ConfigOptions, type TargetType, transformDirectory, transformTypes } from 'ts-swc-transform';
 import { type CommandCallback, type CommandOptions, loadConfig } from 'tsds-lib';
 
 const MAX_FILES = 10;
+const concurrency = Math.min(64, Math.max(8, (os.cpus()?.length ?? 4) * 8));
 
 const reportFn = (dest: string, type: TargetType, cb: CommandCallback | DeferCallback) => (err?: Error, results?: string[]) => {
   if (err) console.log(`${type} failed: ${err.message}`);
@@ -55,7 +57,7 @@ export default function files(_args: string[], type: TargetType, options: Comman
           const destPath = path.join(dest, relative, `${entry.basename.slice(0, -ext.length)}.d.${ext === '.js' ? 'cts' : 'mts'}`);
           copyFile(sourcePath, destPath, (err) => (err && err.code !== 'ENOENT' ? cb(err) : cb()));
         },
-        { callbacks: true, concurrency: Infinity },
+        { callbacks: true, concurrency },
         callback
       );
     });
