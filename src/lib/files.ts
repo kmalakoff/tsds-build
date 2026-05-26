@@ -14,7 +14,7 @@ const concurrency = Math.min(64, Math.max(8, (os.cpus()?.length ?? 4) * 8));
 const reportFn = (dest: string, type: TargetType, cb: CommandCallback | DeferCallback) => (err?: Error | null, results?: string[]) => {
   if (err) console.log(`${type} failed: ${err.message}`);
   else console.log(`Created ${(results?.length ?? 0) < MAX_FILES ? results?.map((x) => `dist/${type}/${path.relative(dest, x)}`).join(',') : `${results?.length} files in dist/${type}`}`);
-  cb(err ?? undefined);
+  cb(err);
 };
 
 export default function files(_args: string[], type: TargetType, options: CommandOptions, callback: CommandCallback): void {
@@ -36,7 +36,7 @@ export default function files(_args: string[], type: TargetType, options: Comman
     if (err) return callback(err);
 
     const queue = new Queue();
-    queue.defer((cb) => fs.writeFile(path.join(dest, 'package.json'), `{ "type": "${type === 'cjs' ? 'commonjs' : 'module'}" }`, 'utf8', (err) => cb(err ?? undefined)));
+    queue.defer((cb) => fs.writeFile(path.join(dest, 'package.json'), `{ "type": "${type === 'cjs' ? 'commonjs' : 'module'}" }`, 'utf8', (err) => cb(err)));
     queue.defer((cb) => transformDirectory(src, dest, type, { ...options, sourceMaps: true } as ConfigOptions, reportFn(dest, type, cb)));
     queue.defer((cb) => transformTypes(src, dest, reportFn(dest, type, cb)));
     queue.await((err) => {
