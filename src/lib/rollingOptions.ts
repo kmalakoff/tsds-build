@@ -22,5 +22,7 @@ DEPS.forEach((x) => {
   }
 });
 
-export const tsconfig = loadConfigSync(process.cwd());
+const _tsconfig = loadConfigSync(process.cwd());
+if (!_tsconfig) throw new Error('Could not find tsconfig.json');
+export const tsconfig = _tsconfig;
 tsconfig.config.compilerOptions = { ...tsconfig.config.compilerOptions, target: 'es5' };
