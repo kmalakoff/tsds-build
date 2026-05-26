@@ -3,6 +3,11 @@ delete process.env.NODE_OPTIONS;
 
 import assert from 'assert';
 import fs from 'fs';
+import { safeRmSync } from 'fs-remove-compat';
+import mkdirp from 'mkdirp-classic';
+
+const mkdirpSync = (mkdirp as unknown as { sync: (path: string) => void }).sync;
+
 import { linkModule, unlinkModule } from 'module-link-unlink';
 import os from 'os';
 import osShim from 'os-shim';
@@ -13,7 +18,7 @@ import shortHash from 'short-hash';
 import { installGitRepo } from 'tsds-lib-test';
 import url from 'url';
 
-import { arrayIncludes, stringEndsWith } from '../lib/compat.ts';
+import { arrayIncludes, stringEndsWith, stringIncludes } from '../lib/compat.ts';
 
 const tmpdir = os.tmpdir || osShim.tmpdir;
 const resolveSync = (resolve.default ?? resolve).sync;
@@ -29,7 +34,7 @@ const GITS = [
   'https://github.com/kmalakoff/react-ref-boundary.git', // .tsx source with UMD target
 ];
 
-function addTests(repo) {
+function addTests(repo: string) {
   const repoName = path.basename(repo, path.extname(repo));
   describe(repoName, () => {
     const dest = path.join(tmpdir(), 'tsds-build', shortHash(process.cwd()), repoName);
@@ -40,10 +45,7 @@ function addTests(repo) {
 
     before((cb) => {
       installGitRepo(repo, dest, (err?: Error): void => {
-        if (err) {
-          cb(err);
-          return;
-        }
+        if (err) return cb(err);
 
         const queue = new Queue();
         queue.defer(linkModule.bind(null, modulePath, nodeModules));
@@ -61,10 +63,8 @@ function addTests(repo) {
     describe('happy path', () => {
       it('build', (done) => {
         build([], { cwd: dest }, (err?: Error): void => {
-          if (err) {
-            done(err);
-            return;
-          }
+          if (err) return done(err);
+
           // Verify dist folder was created
           assert.ok(fs.existsSync(path.join(dest, 'dist')), 'dist folder should exist');
 
@@ -101,8 +101,8 @@ describe('umd entry override', () => {
   const pkgName = 'tsds-build-umd-entry-test';
 
   before((cb) => {
-    fs.rmSync(dest, { recursive: true, force: true });
-    fs.mkdirSync(path.join(dest, 'src'), { recursive: true });
+    safeRmSync(dest, { recursive: true, force: true });
+    mkdirpSync(path.join(dest, 'src'));
 
     const pkg = {
       name: pkgName,
@@ -147,16 +147,13 @@ describe('umd entry override', () => {
 
   it('uses entry for UMD bundle input', (done) => {
     build([], { cwd: dest }, (err?: Error): void => {
-      if (err) {
-        done(err);
-        return;
-      }
+      if (err) return done(err);
 
       const umdFile = path.join(dest, 'dist', 'umd', `${pkgName}.cjs`);
       assert.ok(fs.existsSync(umdFile), 'UMD output should exist');
       const output = fs.readFileSync(umdFile, 'utf8');
-      assert.ok(output.includes('UMD_ONLY'), 'UMD bundle should include entry override content');
-      assert.ok(!output.includes('INDEX_ONLY'), 'UMD bundle should not include default source content');
+      assert.ok(stringIncludes(output, 'UMD_ONLY'), 'UMD bundle should include entry override content');
+      assert.ok(!stringIncludes(output, 'INDEX_ONLY'), 'UMD bundle should not include default source content');
       done();
     });
   });
