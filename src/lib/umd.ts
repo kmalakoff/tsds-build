@@ -13,7 +13,7 @@ const major = +process.versions.node.split('.')[0];
 const __dirname = path.dirname(typeof __filename === 'undefined' ? url.fileURLToPath(import.meta.url) : __filename);
 const dist = path.join(__dirname, '..', '..');
 
-const installSyncRollup = debounce(installSync, 300, { leading: true, trailing: false });
+const installSyncRollup = debounce(installSync as unknown as (...args: unknown[]) => void, 300, { leading: true, trailing: false }) as unknown as typeof installSync;
 
 function run(_args: string[], options: CommandOptions, callback: CommandCallback) {
   const cwd: string = (options.cwd as string) || process.cwd();
@@ -25,12 +25,12 @@ function run(_args: string[], options: CommandOptions, callback: CommandCallback
     const rollup = resolveBin('rollup');
 
     const queue = new Queue(1);
-    queue.defer(safeRm.bind(null, dest));
+    queue.defer((cb) => safeRm(dest, (err) => cb(err ?? undefined)));
     queue.defer(spawn.bind(null, rollup, ['--config', path.join(configRoot, 'config.js')], options));
     queue.defer(spawn.bind(null, rollup, ['--config', path.join(configRoot, 'config.min.js')], options));
     queue.await(callback);
   } catch (err) {
-    return callback(err);
+    return callback(err instanceof Error ? err : new Error(String(err)));
   }
 }
 
