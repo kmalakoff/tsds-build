@@ -44,25 +44,25 @@ function addTests(repo: string) {
     const deps = { ...(modulePackage.dependencies || {}), ...(modulePackage.peerDependencies || {}) };
 
     before((cb) => {
-      installGitRepo(repo, dest, (err?: Error): void => {
+      installGitRepo(repo, dest, (err?: Error | null): void => {
         if (err) return cb(err);
 
         const queue = new Queue();
-        queue.defer(linkModule.bind(null, modulePath, nodeModules));
-        for (const dep in deps) queue.defer(linkModule.bind(null, path.dirname(resolveSync(`${dep}/package.json`)), nodeModules));
+        queue.defer((cb) => linkModule(modulePath, nodeModules, (err) => cb(err)));
+        for (const dep in deps) queue.defer((cb) => linkModule(path.dirname(resolveSync(`${dep}/package.json`)), nodeModules, (err) => cb(err)));
         queue.await(cb);
       });
     });
     after((cb) => {
       const queue = new Queue();
-      queue.defer(unlinkModule.bind(null, modulePath, nodeModules));
-      for (const dep in deps) queue.defer(unlinkModule.bind(null, path.dirname(resolveSync(`${dep}/package.json`)), nodeModules));
+      queue.defer((cb) => unlinkModule(modulePath, nodeModules, (err) => cb(err)));
+      for (const dep in deps) queue.defer((cb) => unlinkModule(path.dirname(resolveSync(`${dep}/package.json`)), nodeModules, (err) => cb(err)));
       queue.await(cb);
     });
 
     describe('happy path', () => {
       it('build', (done) => {
-        build([], { cwd: dest }, (err?: Error): void => {
+        build([], { cwd: dest }, (err?: Error | null): void => {
           if (err) return done(err);
 
           // Verify dist folder was created
@@ -133,20 +133,20 @@ describe('umd entry override', () => {
     fs.writeFileSync(path.join(dest, 'src', 'umd.ts'), "export const fromUmd = 'UMD_ONLY';\nexport default function umdDefault() { return fromUmd; }\n");
 
     const queue = new Queue();
-    queue.defer(linkModule.bind(null, modulePath, nodeModules));
-    for (const dep in deps) queue.defer(linkModule.bind(null, path.dirname(resolveSync(`${dep}/package.json`)), nodeModules));
+    queue.defer((cb) => linkModule(modulePath, nodeModules, (err) => cb(err)));
+    for (const dep in deps) queue.defer((cb) => linkModule(path.dirname(resolveSync(`${dep}/package.json`)), nodeModules, (err) => cb(err)));
     queue.await(cb);
   });
 
   after((cb) => {
     const queue = new Queue();
-    queue.defer(unlinkModule.bind(null, modulePath, nodeModules));
-    for (const dep in deps) queue.defer(unlinkModule.bind(null, path.dirname(resolveSync(`${dep}/package.json`)), nodeModules));
+    queue.defer((cb) => unlinkModule(modulePath, nodeModules, (err) => cb(err)));
+    for (const dep in deps) queue.defer((cb) => unlinkModule(path.dirname(resolveSync(`${dep}/package.json`)), nodeModules, (err) => cb(err)));
     queue.await(cb);
   });
 
   it('uses entry for UMD bundle input', (done) => {
-    build([], { cwd: dest }, (err?: Error): void => {
+    build([], { cwd: dest }, (err?: Error | null): void => {
       if (err) return done(err);
 
       const umdFile = path.join(dest, 'dist', 'umd', `${pkgName}.cjs`);
