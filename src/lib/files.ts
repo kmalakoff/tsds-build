@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { copyFile } from 'fs-copy-compat';
 import Iterator, { type Entry } from 'fs-iterator';
 import mkdirp from 'mkdirp-classic';
 import path from 'path';
@@ -52,7 +53,7 @@ export default function files(_args: string[], type: TargetType, options: Comman
           const relative = path.relative(dest, path.dirname(entry.fullPath));
           const sourcePath = path.join(dest, relative, `${entry.basename.slice(0, -ext.length)}.d.ts`);
           const destPath = path.join(dest, relative, `${entry.basename.slice(0, -ext.length)}.d.${ext === '.js' ? 'cts' : 'mts'}`);
-          fs.copyFile(sourcePath, destPath, (err) => (err && err.code !== 'ENOENT' ? cb(err) : cb()));
+          copyFile(sourcePath, destPath, (err) => (err && err.code !== 'ENOENT' ? cb(err) : cb()));
         },
         { callbacks: true, concurrency: Infinity },
         callback
