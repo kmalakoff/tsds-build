@@ -12,7 +12,6 @@ import { linkModule, unlinkModule } from 'module-link-unlink';
 import path from 'path';
 import Queue from 'queue-cb';
 import * as resolve from 'resolve';
-import shortHash from 'short-hash';
 import { installGitRepo } from 'tsds-lib-test';
 import url from 'url';
 
@@ -35,7 +34,7 @@ const GITS = [
 function addTests(repo: string) {
   const repoName = path.basename(repo, path.extname(repo));
   describe(repoName, () => {
-    const dest = path.join(packageRoot, '.tmp', 'cache', shortHash(process.cwd()), repoName);
+    const dest = path.join(packageRoot, '.cache', repoName);
     const modulePath = fs.realpathSync(path.join(__dirname, '..', '..'));
     const modulePackage = JSON.parse(fs.readFileSync(path.join(modulePath, 'package.json'), 'utf8'));
     const nodeModules = path.join(dest, 'node_modules');
@@ -91,7 +90,7 @@ describe('lib', () => {
 });
 
 describe('umd entry override', () => {
-  const dest = path.join(packageRoot, '.tmp', 'cache', shortHash(process.cwd()), 'umd-entry-override');
+  const dest = path.join(packageRoot, '.tmp', 'umd-entry-override');
   const modulePath = fs.realpathSync(path.join(__dirname, '..', '..'));
   const modulePackage = JSON.parse(fs.readFileSync(path.join(modulePath, 'package.json'), 'utf8'));
   const nodeModules = path.join(dest, 'node_modules');
@@ -140,7 +139,10 @@ describe('umd entry override', () => {
     const queue = new Queue();
     queue.defer((cb) => unlinkModule(modulePath, nodeModules, (err) => cb(err)));
     for (const dep in deps) queue.defer((cb) => unlinkModule(path.dirname(resolveSync(`${dep}/package.json`)), nodeModules, (err) => cb(err)));
-    queue.await(cb);
+    queue.await((err) => {
+      safeRmSync(dest, { recursive: true, force: true });
+      cb(err);
+    });
   });
 
   it('uses entry for UMD bundle input', (done) => {
